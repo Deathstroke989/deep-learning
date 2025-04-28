@@ -1,0 +1,71 @@
+from keras._tf_keras.keras.utils import image_dataset_from_directory
+import tensorflow as tf
+from keras._tf_keras.keras.models import Sequential
+from keras._tf_keras.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout
+from keras._tf_keras.keras.utils import image_dataset_from_directory
+
+# Parameters
+image_size = (256, 256)
+batch_size = 32
+
+# Load datasets
+train_ds = image_dataset_from_directory(
+    "D:/New folder (3)/7272660",
+    labels='inferred',
+    label_mode='categorical',
+    color_mode='grayscale',
+    batch_size=batch_size,
+    image_size=image_size,
+    shuffle=True,
+    validation_split=0.2,
+    subset='training',
+    seed=123
+)
+
+val_ds = image_dataset_from_directory(
+    "D:/New folder (3)/7272660",
+    labels='inferred',
+    label_mode='categorical',
+    color_mode='grayscale',
+    batch_size=batch_size,
+    image_size=image_size,
+    shuffle=True,
+    validation_split=0.2,
+    subset='validation',
+    seed=123
+)
+
+# Optimize performance
+train_ds = train_ds.cache().shuffle(1000).prefetch(tf.data.AUTOTUNE)
+val_ds = val_ds.cache().prefetch(tf.data.AUTOTUNE)
+
+# Define model
+model = Sequential([
+    Conv2D(32, (3, 3), activation='relu', input_shape=(256, 256, 1)),
+    MaxPooling2D((2, 2)),
+    Conv2D(64, (3, 3), activation='relu'),
+    MaxPooling2D((2, 2)),
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dropout(0.5),
+    Dense(3, activation='softmax')
+])
+
+# Compile model
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Train model
+history = model.fit(
+    train_ds,
+    validation_data=val_ds,
+    epochs=10
+)
+
+# Evaluate
+loss, accuracy = model.evaluate(val_ds)
+print(f"Validation Loss: {loss}, Accuracy: {accuracy}")
+
+
+
+# Save model
+model.save("d:/my model.keras")
